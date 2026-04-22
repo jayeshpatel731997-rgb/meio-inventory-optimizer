@@ -18,7 +18,7 @@ engine = create_engine("postgresql://postgres:Jayesh%4073@localhost:5432/meio_op
 # =========================
 # LOAD DATA
 # =========================
-df = pd.read_sql("SELECT * FROM opt_inventory_policy", engine)
+df = pd.read_csv("sample_data.csv")
 
 # =========================
 # SIDEBAR
