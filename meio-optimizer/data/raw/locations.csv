@@ -1,0 +1,29 @@
+location_id,location_name,city,state,location_type,region,capacity_units,operating_cost_per_day
+LOC-CHI-DC1,Chicago Main DC,Chicago,IL,DC,Midwest,850000,12500
+LOC-CHI-DC2,Chicago Overflow DC,Elgin,IL,DC,Midwest,320000,4800
+LOC-ATL-DC1,Atlanta Regional DC,Atlanta,GA,DC,Southeast,720000,10200
+LOC-LAX-DC1,Los Angeles DC,Compton,CA,DC,West,900000,15800
+LOC-DAL-DC1,Dallas Fort Worth DC,Irving,TX,DC,South,680000,9100
+LOC-NYC-DC1,New Jersey Metro DC,Newark,NJ,DC,Northeast,780000,14200
+LOC-SEA-RDC,Seattle RDC,Renton,WA,RDC,West,210000,3900
+LOC-DEN-RDC,Denver RDC,Aurora,CO,RDC,Mountain,185000,3200
+LOC-MIA-RDC,Miami RDC,Hialeah,FL,RDC,Southeast,195000,3600
+LOC-BOS-RDC,Boston RDC,Woburn,MA,RDC,Northeast,160000,4100
+LOC-PHX-RDC,Phoenix RDC,Tempe,AZ,RDC,West,175000,2900
+LOC-MIN-RDC,Minneapolis RDC,Bloomington,MN,RDC,Midwest,155000,3100
+LOC-STL-RDC,St. Louis RDC,St. Louis,MO,RDC,Midwest,140000,2700
+LOC-POR-RDC,Portland RDC,Portland,OR,RDC,West,130000,3300
+LOC-DET-RDC,Detroit RDC,Dearborn,MI,RDC,Midwest,145000,2800
+LOC-HOU-RDC,Houston RDC,Houston,TX,RDC,South,190000,3400
+LOC-CHI-S01,Chicago Store 01,Chicago,IL,STORE,Midwest,12000,850
+LOC-CHI-S02,Chicago Store 02,Naperville,IL,STORE,Midwest,10500,780
+LOC-ATL-S01,Atlanta Store 01,Buckhead,GA,STORE,Southeast,9800,720
+LOC-LAX-S01,LA Store 01,Pasadena,CA,STORE,West,11200,920
+LOC-NYC-S01,NYC Store 01,Manhattan,NY,STORE,Northeast,8500,1100
+LOC-NYC-S02,NYC Store 02,Brooklyn,NY,STORE,Northeast,9200,980
+LOC-DAL-S01,Dallas Store 01,Plano,TX,STORE,South,10800,760
+LOC-SEA-S01,Seattle Store 01,Bellevue,WA,STORE,West,9500,840
+LOC-MIA-S01,Miami Store 01,Coral Gables,FL,STORE,Southeast,8900,790
+LOC-DEN-S01,Denver Store 01,Cherry Creek,CO,STORE,Mountain,8200,710
+LOC-BOS-S01,Boston Store 01,Cambridge,MA,STORE,Northeast,7800,880
+LOC-PHX-S01,Phoenix Store 01,Scottsdale,AZ,STORE,West,9100,700
