@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 
+st.write("App is running 🚀")
+
 st.set_page_config(page_title="MEIO Inventory Optimizer", layout="wide")
 
 st.title("📦 MEIO Inventory Optimization Dashboard")
