@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+# from sqlalchemy import create_engine
 
 # =========================
 # CONFIG
@@ -13,7 +13,7 @@ st.title("📊 MEIO Inventory Optimization Dashboard")
 # =========================
 # DB CONNECTION
 # =========================
-engine = create_engine("postgresql://postgres:Jayesh%4073@localhost:5432/meio_optimizer_db")
+# engine = create_engine("postgresql://postgres:Jayesh%4073@localhost:5432/meio_optimizer_db")
 
 # =========================
 # LOAD DATA
