@@ -1,20 +1,14 @@
 import streamlit as st
 import pandas as pd
+import os
 
-# -----------------------------
-# DEBUG (VERY IMPORTANT)
-# -----------------------------
-st.write("APP IS RUNNING")
+# Get current file directory
+BASE_DIR = os.path.dirname(__file__)
 
-# -----------------------------
-# LOAD DATA
-# -----------------------------
-try:
-    df = pd.read_csv("meio-optimizer/sample_data.csv")
-    st.success("Data loaded successfully")
-except Exception as e:
-    st.error(f"Error loading data: {e}")
-    st.stop()
+# Build correct path
+file_path = os.path.join(BASE_DIR, "sample_data.csv")
+
+df = pd.read_csv(file_path)
 
 # -----------------------------
 # TITLE
