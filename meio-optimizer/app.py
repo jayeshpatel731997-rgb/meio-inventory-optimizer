@@ -10,7 +10,7 @@ st.write("APP IS RUNNING")
 # LOAD DATA
 # -----------------------------
 try:
-    df = pd.read_csv("sample_data.csv")
+    df = pd.read_csv("meio-optimizer/sample_data.csv")
     st.success("Data loaded successfully")
 except Exception as e:
     st.error(f"Error loading data: {e}")
