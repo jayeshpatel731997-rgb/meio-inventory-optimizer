@@ -1,0 +1,4 @@
+customer_segment,target_fill_rate,z_score,penalty_stockout_per_unit,priority_rank,max_backorder_days,expedite_threshold,review_period_days,holding_cost_rate,min_order_qty
+PREMIUM,0.9900,2.3300,35.00,1,1,25,7,0.2500,20
+STANDARD,0.9500,1.6500,18.00,2,3,50,14,0.2200,40
+BUDGET,0.9000,1.2800,9.00,3,7,100,21,0.1800,60

@@ -1,2 +1,7 @@
 streamlit
 pandas
+SQLAlchemy
+python-dotenv
+psycopg[binary]
+psycopg2-binary
+pytest

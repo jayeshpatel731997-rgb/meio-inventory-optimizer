@@ -1,0 +1,8 @@
+location_id,location_name,location_type,region,echelon,capacity_units,storage_cost_per_unit,fixed_operating_cost
+LOC-CHI-DC,Chicago Central DC,DC,Midwest,1,50000,0.0700,18500
+LOC-ATL-DC,Atlanta Southeast DC,DC,Southeast,1,42000,0.0680,16200
+LOC-DEN-RDC,Denver Regional RDC,RDC,Mountain,2,22000,0.0820,8200
+LOC-CHI-RDC,Chicago Metro RDC,RDC,Midwest,2,26000,0.0790,9100
+LOC-CHI-STORE,Chicago North Store,STORE,Midwest,3,6000,0.1150,2100
+LOC-ATL-STORE,Atlanta Midtown Store,STORE,Southeast,3,5500,0.1180,2050
+LOC-DAL-STORE,Dallas Plano Store,STORE,South,3,5200,0.1200,1980

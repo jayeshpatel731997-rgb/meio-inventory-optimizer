@@ -1,0 +1,10 @@
+.env
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.uv-cache/
+.uv-python/
+meio-optimizer/logs/
+meio-optimizer/outputs/
