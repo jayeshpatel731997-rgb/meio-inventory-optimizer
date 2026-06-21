@@ -1,99 +1,148 @@
-# 📦 MEIO Decision Intelligence Dashboard
+# MEIO Decision Intelligence Dashboard
 
-An interactive inventory optimization and decision-support tool built with **PostgreSQL, Python, and Streamlit**.  
-This project simulates **service-level changes**, recalculates **safety stock** and **reorder points**, estimates **inventory cost tradeoffs**, and highlights **high-risk SKUs** across SKU-location combinations.
+This project now supports two runtime modes:
 
-## 🚀 Live App
-Streamlit deployment: `https://meio-inventory-optimizer-kvasgjglbaqvy77xz9ietu.streamlit.app`
+- PostgreSQL marts connected
+- CSV demo fallback
 
----
+The app will try PostgreSQL first through `DATABASE_URL`. If that is missing or the marts cannot be read, it will safely fall back to `sample_data.csv` so the dashboard still opens.
 
-## 🎯 Business Problem
+## App launch
 
-Supply chain teams do not just need dashboards that show historical numbers. They need tools that help answer questions like:
+From repo root:
 
-- What happens if we increase service level from 95% to 98%?
-- How much additional safety stock will be required?
-- Which SKUs create the highest holding-cost burden?
-- Which SKU-location combinations are most at risk?
+```powershell
+cd meio-optimizer
+.\.venv\Scripts\activate
+streamlit run app.py --server.port 8504
+```
 
-This project was built to move from a **static inventory dashboard** to a **decision intelligence tool** for inventory planning.
+You can also run the root helper:
 
----
+```powershell
+cd C:\Users\jayes\Desktop\MEIO
+.\run_app.ps1
+```
 
-## 🧠 What the App Does
+The helper prompts for the PostgreSQL password, URL-encodes it with PowerShell, sets `DATABASE_URL`, runs `test_db_connection.py`, and launches Streamlit only when the mart smoke test passes.
 
-The dashboard allows users to:
+## Database configuration
 
-- adjust **target service level**
-- adjust **holding cost per unit**
-- adjust **stockout cost per unit**
-- filter by **SKU** and **location**
-- compare **current vs simulated inventory policy**
-- identify **top costliest SKUs**
-- identify **high-risk SKUs**
-- export scenario results as CSV
+Set `DATABASE_URL` before launching the app:
 
----
+The app uses the local PostgreSQL database at `127.0.0.1:5432/meio_optimizer_db`.
 
-## ✨ Key Features
+Example in PowerShell:
 
-### 1. Interactive optimization controls
-Users can simulate different inventory strategies with:
-- Service Level (%)
-- Holding Cost per Unit ($)
-- Stockout Cost per Unit ($)
+```powershell
+$env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.0.0.1:5432/meio_optimizer_db"
+```
 
-### 2. Dynamic inventory logic
-The app recalculates:
-- simulated safety stock
-- simulated reorder point
-- holding cost
-- risk cost
-- total estimated cost
+If your password contains `@`, encode it as `%40` inside `DATABASE_URL`.
+For example, password `Jayesh@73` becomes `Jayesh%4073`.
 
-### 3. Executive summary
-A top KPI section shows:
-- filtered SKUs
-- average simulated safety stock
-- average simulated reorder point
-- total estimated cost
+Shell `DATABASE_URL` has highest priority. A `.env` file will not override it.
 
-### 4. Decision insights
-The app surfaces:
-- **Top 5 Costliest SKUs**
-- **High Risk SKUs**
-- **Current vs Simulated Policy**
+## Database smoke test
 
-### 5. Exportable scenario output
-Users can download the simulated inventory policy for further analysis.
+```powershell
+cd C:\Users\jayes\Desktop\MEIO\meio-optimizer
+$env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.0.0.1:5432/meio_optimizer_db"
+.\.venv\Scripts\python.exe test_db_connection.py
+.\.venv\Scripts\python.exe -m streamlit run app.py --server.port 8504
+```
 
----
+## What the app reads
 
-## 🏗️ Tech Stack
+The app expects these PostgreSQL objects when database mode is enabled:
 
-- **SQL / PostgreSQL** — data pipeline and marts
-- **Python** — optimization logic and simulation
-- **Pandas** — data transformation
-- **Streamlit** — interactive dashboard
-- **GitHub + Streamlit Cloud** — deployment
+- `mart_demand_stats`
+- `mart_inventory_position`
+- `mart_cost_to_serve`
+- `mart_network_flow`
+- `mart_data_quality_report`
+- `dim_service_policy`
 
----
+## SQL pipeline
 
-## 📂 Project Structure
+The repo root SQL files are the source of truth for the pipeline:
+
+- `schema.sql`
+- `ingest.sql`
+- `cleaning.sql`
+- `marts.sql`
+
+Run order:
+
+```text
+schema.sql -> ingest.sql -> cleaning.sql -> marts.sql
+```
+
+Important:
+
+- `ingest.sql` is configured for `C:/Users/jayes/Desktop/MEIO/data/raw`.
+- This repo does not assume a running local PostgreSQL database unless you provide one.
+
+Root helper command:
+
+```powershell
+cd C:\Users\jayes\Desktop\MEIO
+.\run_pipeline.ps1 -Database meio_optimizer_db -User postgres
+```
+
+If PostgreSQL requires a password in your shell:
+
+```powershell
+$env:PGPASSWORD="YOUR_POSTGRES_PASSWORD"
+.\run_pipeline.ps1 -Database meio_optimizer_db -User postgres
+```
+
+## SQL verification
+
+After running the pipeline, you can verify the expected marts with:
+
+```powershell
+psql -d meio_optimizer_db -f verify_marts.sql
+```
+
+Or run the scripts one by one:
+
+```powershell
+psql -d meio_optimizer_db -f schema.sql
+psql -d meio_optimizer_db -f ingest.sql
+psql -d meio_optimizer_db -f cleaning.sql
+psql -d meio_optimizer_db -f marts.sql
+psql -d meio_optimizer_db -f verify_marts.sql
+```
+
+## Tests
+
+From `meio-optimizer`:
+
+```powershell
+.\.venv\Scripts\python.exe -m compileall app.py src tests test_db_connection.py
+.\.venv\Scripts\python.exe -m pytest
+```
+
+## Project structure
 
 ```text
 MEIO/
-├── meio-optimizer/
-│   ├── app.py
-│   ├── sample_data.csv
-│   ├── requirements.txt
-│   ├── data/
-│   ├── outputs/
-│   ├── sql/
-│   └── src/
-├── marts.sql
-├── cleaning.sql
-├── ingest.sql
-├── schema.sql
-└── meio.py
+|-- schema.sql
+|-- ingest.sql
+|-- cleaning.sql
+|-- marts.sql
+|-- verify_marts.sql
+`-- meio-optimizer/
+    |-- app.py
+    |-- sample_data.csv
+    |-- requirements.txt
+    |-- src/
+    |   |-- db.py
+    |   |-- data_access.py
+    |   |-- optimizer.py
+    |   |-- scenario_engine.py
+    |   |-- recommendations.py
+    |   `-- data_quality.py
+    `-- tests/
+```

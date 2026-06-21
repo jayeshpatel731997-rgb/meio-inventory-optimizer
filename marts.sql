@@ -15,25 +15,25 @@ WITH daily_demand AS (
         DATE_TRUNC('week', o.order_date) AS week_start,
         DATE_TRUNC('month', o.order_date) AS month_start,
         o.sku_id,
-        o.location_id,
+        o.ship_to_location,
         o.customer_segment,
         SUM(o.qty_ordered) AS total_qty_ordered,
         COUNT(DISTINCT o.order_id) AS num_orders,
         AVG(o.price_per_unit) AS avg_price_per_unit
     FROM fact_sales_orders o
-    WHERE o.location_id IS NOT NULL
+    WHERE o.ship_to_location IS NOT NULL
     GROUP BY
         o.order_date,
         DATE_TRUNC('week', o.order_date),
         DATE_TRUNC('month', o.order_date),
         o.sku_id,
-        o.location_id,
+        o.ship_to_location,
         o.customer_segment
 ),
 demand_spine AS (
     SELECT DISTINCT
         d.sku_id,
-        d.location_id AS location_id,
+        d.ship_to_location AS location_id,
         d.customer_segment
     FROM daily_demand d
 )
@@ -46,41 +46,38 @@ SELECT
     sp.z_score,
     sp.target_fill_rate,
     COUNT(dd.order_date) AS observation_days,
-    AVG(dd.total_qty_ordered) AS avg_demand_per_day,
-    STDDEV(dd.total_qty_ordered) AS std_demand_per_day,
-    MAX(dd.total_qty_ordered) AS max_demand_per_day,
-    MIN(dd.total_qty_ordered) AS min_demand_per_day,
-    COALESCE(
-        PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY dd.total_qty_ordered),
-        0
-    ) AS p50_demand,
-    COALESCE(
-        PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY dd.total_qty_ordered),
-        0
-    ) AS p90_demand,
-    COALESCE(
-        PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY dd.total_qty_ordered),
-        0
-    ) AS p95_demand,
+    COALESCE(AVG(dd.total_qty_ordered), 0) AS avg_demand_per_day,
+    COALESCE(STDDEV(dd.total_qty_ordered), 0) AS std_demand_per_day,
+    COALESCE(MAX(dd.total_qty_ordered), 0) AS max_demand_per_day,
+    COALESCE(MIN(dd.total_qty_ordered), 0) AS min_demand_per_day,
+    COALESCE(PERCENTILE_CONT(0.50) WITHIN GROUP (ORDER BY dd.total_qty_ordered), 0) AS p50_demand,
+    COALESCE(PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY dd.total_qty_ordered), 0) AS p90_demand,
+    COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY dd.total_qty_ordered), 0) AS p95_demand,
     CASE
         WHEN AVG(dd.total_qty_ordered) > 0
             THEN COALESCE(STDDEV(dd.total_qty_ordered), 0) / NULLIF(AVG(dd.total_qty_ordered), 0)
         ELSE NULL
     END AS coefficient_of_variation,
     ROUND(
-        sp.z_score
-        * COALESCE(STDDEV(dd.total_qty_ordered), 0)
-        * SQRT(s.lead_time_days)
-    ) AS safety_stock_units,
-    ROUND(
-        (COALESCE(AVG(dd.total_qty_ordered), 0) * s.lead_time_days)
-        + (
+        (
             sp.z_score
             * COALESCE(STDDEV(dd.total_qty_ordered), 0)
             * SQRT(s.lead_time_days)
-        )
+        )::numeric,
+        0
+    ) AS safety_stock_units,
+    ROUND(
+        (
+            (COALESCE(AVG(dd.total_qty_ordered), 0) * s.lead_time_days)
+            + (
+                sp.z_score
+                * COALESCE(STDDEV(dd.total_qty_ordered), 0)
+                * SQRT(s.lead_time_days)
+            )
+        )::numeric,
+        0
     ) AS reorder_point_units,
-    ROUND(COALESCE(AVG(dd.total_qty_ordered), 0) * 365) AS annual_demand_estimate
+    ROUND((COALESCE(AVG(dd.total_qty_ordered), 0) * 365)::numeric, 0) AS annual_demand_estimate
 FROM demand_spine spine
 JOIN dim_sku s
     ON spine.sku_id = s.sku_id
@@ -88,7 +85,7 @@ JOIN dim_service_policy sp
     ON spine.customer_segment = sp.customer_segment
 LEFT JOIN daily_demand dd
     ON spine.sku_id = dd.sku_id
-    AND spine.location_id = dd.location_id,
+    AND spine.location_id = dd.ship_to_location
     AND spine.customer_segment = dd.customer_segment
 GROUP BY
     spine.sku_id,
@@ -153,7 +150,7 @@ SELECT
     ds.avg_demand_per_day,
     CASE
         WHEN ds.avg_demand_per_day > 0
-            THEN ROUND(ls.on_hand_qty / ds.avg_demand_per_day)
+            THEN ROUND((ls.on_hand_qty / ds.avg_demand_per_day)::numeric, 0)
         ELSE NULL
     END AS days_of_supply,
     ROUND((ls.on_hand_qty * s.unit_cost)::numeric, 2) AS inventory_value_usd,
@@ -183,7 +180,7 @@ WITH order_costs AS (
         o.order_id,
         o.sku_id,
         o.customer_segment,
-        o.location_id,
+        o.ship_to_location,
         l_ship.region AS ship_to_region,
         l_from.location_type AS fulfilled_from_type,
         o.qty_ordered,
@@ -194,7 +191,7 @@ WITH order_costs AS (
         o.qty_ordered * 0.50 AS warehouse_handling_cost,
         (s.unit_cost * 0.25 / 365 * s.lead_time_days * o.qty_ordered) AS carrying_cost,
         COALESCE(
-            (o.qty_ordered - sh.qty_shipped) * sp.penalty_stockout_per_unit,
+            (o.qty_ordered - COALESCE(sh.qty_shipped, 0)) * sp.penalty_stockout_per_unit,
             0
         ) AS stockout_cost,
         2.50 AS order_processing_cost
@@ -206,7 +203,7 @@ WITH order_costs AS (
     LEFT JOIN fact_shipments sh
         ON o.order_id = sh.order_id
     LEFT JOIN dim_location l_ship
-        ON o.location_id = l_location_id
+        ON o.ship_to_location = l_ship.location_id
     LEFT JOIN dim_location l_from
         ON sh.from_location = l_from.location_id
 )
@@ -257,8 +254,7 @@ SELECT
                 + carrying_cost
                 + stockout_cost
                 + order_processing_cost
-            )
-            / NULLIF(SUM(qty_ordered), 0)
+            ) / NULLIF(SUM(qty_ordered), 0)
         )::numeric,
         4
     ) AS cost_per_unit,
@@ -275,8 +271,7 @@ SELECT
                     + stockout_cost
                     + order_processing_cost
                 )
-            )
-            / NULLIF(SUM(order_revenue), 0) * 100
+            ) / NULLIF(SUM(order_revenue), 0) * 100
         )::numeric,
         2
     ) AS margin_pct
@@ -350,9 +345,7 @@ SELECT
     'Mixed formats: SKU-001, SKU001, sku_001, Sku-001, SKU 001' AS description,
     'UPPER + REPLACE hyphens/underscores/spaces' AS resolution_method,
     CURRENT_DATE AS run_timestamp
-
 UNION ALL
-
 SELECT
     'dim_sku',
     'lead_time_null',
@@ -362,11 +355,9 @@ SELECT
         WHERE lead_time_days IS NULL OR BTRIM(lead_time_days::text) = ''
     ),
     '24 rows missing lead_time_days (~12% of SKUs)',
-    'Category-average imputation (Electronics avg != Bulk avg)',
+    'Category-average imputation',
     CURRENT_DATE
-
 UNION ALL
-
 SELECT
     'dim_sku',
     'active_flag_inconsistent',
@@ -376,11 +367,9 @@ SELECT
         WHERE active NOT IN ('Y', 'N', '1', '0')
     ),
     'Inconsistent active flags: Y, YES, y, 1, true',
-    'CASE WHEN UPPER(active) IN (Y,YES,1,TRUE,T) THEN TRUE ELSE FALSE',
+    'Normalize active flags with CASE logic',
     CURRENT_DATE
-
 UNION ALL
-
 SELECT
     'fact_sales_orders',
     'duplicate_order_id',
@@ -388,12 +377,10 @@ SELECT
         SELECT COUNT(*) - COUNT(DISTINCT order_id)
         FROM fact_sales_orders_raw
     ),
-    '~10 duplicate order_ids from ERP re-transmission bug',
-    'DISTINCT ON order_id, keep MAX ctid (most recent transmission)',
+    'Duplicate order_ids from ERP retransmission',
+    'DISTINCT ON order_id, keep most recent row',
     CURRENT_DATE
-
 UNION ALL
-
 SELECT
     'fact_shipments',
     'freight_cost_outlier',
@@ -405,22 +392,22 @@ SELECT
           AND freight_cost_usd::text ~ '^[0-9]+(\.[0-9]+)?$'
           AND CAST(freight_cost_usd AS numeric) > 10000
     ),
-    '7 entries at 100x normal freight cost (data entry typos)',
-    'Winsorization at P99 per transport mode (cap, do not drop)',
+    'Freight outliers above normal operating range',
+    'Winsorize at P99 by transport mode',
     CURRENT_DATE
-
 UNION ALL
-
 SELECT
     'fact_shipments',
     'freight_cost_null',
-    30,
-    '30 missing freight_cost_usd values',
-    'Mode-level average imputation (AIR/TRUCK/RAIL imputed separately)',
+    (
+        SELECT COUNT(*)
+        FROM fact_shipments_raw
+        WHERE freight_cost_usd IS NULL OR BTRIM(freight_cost_usd::text) = ''
+    ),
+    'Missing freight cost values',
+    'Impute using mode-level average',
     CURRENT_DATE
-
 UNION ALL
-
 SELECT
     'fact_inventory_snapshot',
     'negative_on_hand',
@@ -432,8 +419,8 @@ SELECT
           AND on_hand_qty::text ~ '^-?[0-9]+$'
           AND CAST(on_hand_qty AS integer) < 0
     ),
-    '9 rows with negative on_hand_qty (WMS sync bug)',
-    'GREATEST(on_hand_qty, 0) - physical inventory cannot be negative',
+    'Negative on-hand quantities from source snapshots',
+    'Floor inventory to zero with GREATEST',
     CURRENT_DATE;
 
 SELECT
@@ -441,39 +428,30 @@ SELECT
     COUNT(*) AS row_count,
     'Safety stock inputs: avg_demand, std_demand, safety_stock_units, reorder_point_units' AS python_reads
 FROM public.mart_demand_stats
-
 UNION ALL
-
 SELECT
     'mart_inventory_position',
     COUNT(*),
     'Current state: on_hand, days_of_supply, stock_status, safety_stock_gap_usd'
 FROM public.mart_inventory_position
-
 UNION ALL
-
 SELECT
     'mart_cost_to_serve',
     COUNT(*),
-    'Cost breakdown: product, freight, warehouse, carrying, stockout - by segment/region/SKU'
+    'Cost breakdown: product, freight, warehouse, carrying, stockout by segment/region/SKU'
 FROM public.mart_cost_to_serve
-
 UNION ALL
-
 SELECT
     'mart_network_flow',
     COUNT(*),
-    'Lane actuals: freight_cost_per_unit, avg_actual_lead_time_days for Monte Carlo'
+    'Lane actuals: freight_cost_per_unit, avg_actual_lead_time_days'
 FROM public.mart_network_flow
-
 UNION ALL
-
 SELECT
     'mart_data_quality_report',
     COUNT(*),
-    'Audit trail: 7 issues found, documented, resolved - for Streamlit Page 2'
+    'Audit trail of data quality issues and applied fixes'
 FROM public.mart_data_quality_report
-
 ORDER BY mart_name;
 
 COMMIT;

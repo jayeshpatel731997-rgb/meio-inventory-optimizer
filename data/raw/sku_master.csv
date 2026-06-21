@@ -1,0 +1,6 @@
+sku_id,description,category,subcategory,unit_cost,unit_volume_cuft,unit_weight_lbs,supplier_id,lead_time_days,reorder_point,active,last_updated
+SKU-001,Industrial Sensor Assembly,Electronics,Sensors,42.50,0.1800,1.20,SUP-110,7,520,Y,2026-04-01
+SKU002,Stainless Fastener Kit,Hardware,Fasteners,8.75,0.0500,0.80,SUP-220,5,680,YES,2026-04-01
+sku_003,Hydraulic Filter Cartridge,MRO,Filtration,18.40,0.2200,2.40,SUP-330,12,410,1,2026-04-01
+SKU 004,Bulk Resin Additive,Bulk Materials,Chemicals,31.20,0.7500,6.50,SUP-440,,360,true,2026-04-01
+SKU-005,Packaging Label Roll,Packaging,Labels,5.10,0.0900,0.60,SUP-550,3,900,Y,2026-04-01
