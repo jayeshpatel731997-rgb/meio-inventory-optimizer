@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: meio-optimizer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: meio-optimizer/requirements.txt
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m compileall app.py src tests test_db_connection.py
+      - run: python -m pytest -q
+
+  postgres-pipeline:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: meio_optimizer_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d meio_optimizer_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Run portable SQL pipeline
+        shell: pwsh
+        run: ./run_pipeline.ps1 -Database meio_optimizer_db -User postgres -HostName localhost -Port 5432 -RawDataPath "${{ github.workspace }}/data/raw"
