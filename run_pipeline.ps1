@@ -51,14 +51,26 @@ function Invoke-PsqlFile {
         "-f", $FilePath
     )
 
-    foreach ($DataFile in $DataFiles.GetEnumerator()) {
-        $args += @("-v", "$($DataFile.Key)=$($DataFile.Value)")
-    }
-
     & $PsqlPath @args
     if ($LASTEXITCODE -ne 0) {
         throw "Failed while running $FilePath"
     }
+}
+
+function New-PortableIngestFile {
+    $TemplatePath = Join-Path $PSScriptRoot "ingest.sql"
+    $Content = Get-Content -LiteralPath $TemplatePath -Raw
+
+    foreach ($DataFile in $DataFiles.GetEnumerator()) {
+        if ($DataFile.Value.Contains("'")) {
+            throw "Raw data paths containing a single quote are not supported: $($DataFile.Value)"
+        }
+        $Content = $Content.Replace("{{$($DataFile.Key)}}", $DataFile.Value)
+    }
+
+    $TempPath = [System.IO.Path]::GetTempFileName()
+    Set-Content -LiteralPath $TempPath -Value $Content -Encoding UTF8
+    return $TempPath
 }
 
 Write-Host "MEIO PostgreSQL pipeline" -ForegroundColor Green
@@ -71,7 +83,13 @@ Write-Host ""
 Write-Host "Assumption: database '$Database' already exists and user '$User' can create/drop tables." -ForegroundColor Yellow
 
 Invoke-PsqlFile (Join-Path $PSScriptRoot "schema.sql")
-Invoke-PsqlFile (Join-Path $PSScriptRoot "ingest.sql")
+$PortableIngestFile = New-PortableIngestFile
+try {
+    Invoke-PsqlFile $PortableIngestFile
+}
+finally {
+    Remove-Item -LiteralPath $PortableIngestFile -Force -ErrorAction SilentlyContinue
+}
 Invoke-PsqlFile (Join-Path $PSScriptRoot "cleaning.sql")
 Invoke-PsqlFile (Join-Path $PSScriptRoot "marts.sql")
 Invoke-PsqlFile (Join-Path $PSScriptRoot "verify_marts.sql")
