@@ -7,7 +7,7 @@ This repository contains a PostgreSQL-backed multi-echelon inventory optimizatio
 - PostgreSQL installed locally
 - `psql` available on `PATH`
 - PowerShell
-- Python virtual environment already present at `meio-optimizer\.venv`
+- Python 3.12+
 
 ## Create the database
 
@@ -19,10 +19,10 @@ If `createdb` is not on your `PATH`, use pgAdmin to create a database named `mei
 
 ## Run the SQL pipeline
 
-From repo root:
+From the repository root (the script resolves SQL and CSV paths from its own
+location, so it can be launched from any working directory):
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO
 .\run_pipeline.ps1 -Database meio_optimizer_db -User postgres
 ```
 
@@ -45,11 +45,13 @@ The runner executes:
 schema.sql -> ingest.sql -> cleaning.sql -> marts.sql -> verify_marts.sql
 ```
 
-`ingest.sql` loads CSV files from:
+By default, `ingest.sql` loads the repository's CSV files from:
 
 ```text
-C:\Users\jayes\Desktop\MEIO\data\raw
+data\raw
 ```
+
+Override the source when needed with `-RawDataPath <directory>`.
 
 ## Set DATABASE_URL
 
@@ -71,7 +73,9 @@ Shell `DATABASE_URL` has highest priority. A `.env` file will not override it.
 ## Test the app database connection
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO\meio-optimizer
+cd meio-optimizer
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 $env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.0.0.1:5432/meio_optimizer_db"
 .\.venv\Scripts\python.exe test_db_connection.py
 .\.venv\Scripts\python.exe -m streamlit run app.py --server.port 8504
@@ -82,14 +86,13 @@ $env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.
 The helper prompts for the PostgreSQL password, URL-encodes it safely, sets `DATABASE_URL`, runs `test_db_connection.py`, and launches Streamlit only if the mart smoke test passes.
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO
 .\run_app.ps1
 ```
 
 Direct command:
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO\meio-optimizer
+cd meio-optimizer
 $env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.0.0.1:5432/meio_optimizer_db"
 .\.venv\Scripts\python.exe test_db_connection.py
 .\.venv\Scripts\python.exe -m streamlit run app.py --server.port 8504
@@ -98,7 +101,7 @@ $env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.
 ## Run tests
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO\meio-optimizer
+cd meio-optimizer
 .\.venv\Scripts\python.exe -m compileall app.py src tests test_db_connection.py
 .\.venv\Scripts\python.exe -m pytest
 ```

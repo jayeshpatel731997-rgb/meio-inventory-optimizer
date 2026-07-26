@@ -271,22 +271,19 @@ WEEK 1 — DATA ENGINEERING
 [DONE] marts.sql   — 5 analytical tables for Python optimizer
 
 WEEK 2 — OPTIMIZATION CORE
-[TODO] src/optimizer.py    <- START HERE
-[TODO] src/simulation.py
-[TODO] src/cost_to_serve.py
-[TODO] outputs/optimized_policy.csv
+[DONE] src/optimizer.py — safety stock and reorder-point optimization
+[DONE] src/scenario_engine.py — policy scenario simulation
+[DONE] SQL cost-to-serve and inventory marts
 
 WEEK 3 — PRESCRIPTIVE ENGINE
-[TODO] src/prescriptive.py
-[TODO] outputs/recommendations.csv
-[TODO] outputs/MEIO_Planning_Export.xlsx
+[DONE] src/recommendations.py — governed planning recommendations
+[DONE] Runtime policy and recommendation exports in the Streamlit app
 
-WEEK 4 — DASHBOARD + CASE STUDY
-[TODO] app.py (Streamlit, 5 pages)
-[TODO] outputs/case_study_amazon.pdf
-[TODO] outputs/case_study_tesla.pdf
-[TODO] README.md
-[TODO] GitHub repo + Streamlit Cloud deploy
+WEEK 4 — DASHBOARD + DELIVERY
+[DONE] app.py — PostgreSQL-first Streamlit dashboard with CSV fallback
+[DONE] README.md and portable PowerShell runners
+[DONE] GitHub repository and automated Python/PostgreSQL CI
+[OPTIONAL] Publish a hosted demo and add separate case-study collateral
 ```
 
 ---
@@ -296,12 +293,12 @@ WEEK 4 — DASHBOARD + CASE STUDY
 Copy-paste this into any AI tool to resume:
 
 ```
-Read MEIO_PROJECT_CONTEXT.md in the /meio-optimizer/ folder.
-This is my supply chain portfolio project. The SQL pipeline (Week 1) is complete.
-I need to build src/optimizer.py next — the Python MEIO optimization layer.
+Read MEIO_PROJECT_CONTEXT.md and README.md in the repository root.
+This is my supply chain portfolio project. The SQL pipeline, optimizer,
+prescriptive engine, dashboard, tests, and CI are implemented.
 
 Start by:
 1. Confirming you understand the project from the context file
-2. Asking 2-3 clarifying questions before writing any code
-3. Then build the SQLAlchemy connection + Stockpyl network scaffold
+2. Running the existing Python and PostgreSQL CI-equivalent checks
+3. Proposing the next production or portfolio improvement from observed gaps
 ```

@@ -31,7 +31,7 @@ COPY dim_location_raw (
     capacity_units,
     operating_cost_per_day
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/locations.csv'
+FROM 'data/raw/locations.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 COPY dim_sku_raw (
@@ -48,7 +48,7 @@ COPY dim_sku_raw (
     segment,
     active
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/sku_master.csv'
+FROM 'data/raw/sku_master.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 COPY dim_service_policy_raw (
@@ -63,7 +63,7 @@ COPY dim_service_policy_raw (
     stockout_penalty_per_unit,
     notes
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/service_policy.csv'
+FROM 'data/raw/service_policy.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 COPY dim_lane_cost_raw (
@@ -77,7 +77,7 @@ COPY dim_lane_cost_raw (
     carrier_mode,
     contract_type
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/lane_costs.csv'
+FROM 'data/raw/lane_costs.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 
@@ -97,7 +97,7 @@ COPY fact_sales_orders_raw (
     channel,
     promised_delivery_date
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/sales_orders.csv'
+FROM 'data/raw/sales_orders.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 COPY fact_shipments_raw (
@@ -115,7 +115,7 @@ COPY fact_shipments_raw (
     weight_lbs,
     pallet_count
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/shipments.csv'
+FROM 'data/raw/shipments.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 COPY fact_inventory_snapshot_raw (
@@ -130,7 +130,7 @@ COPY fact_inventory_snapshot_raw (
     snapshot_source,
     days_of_supply
 )
-FROM 'C:/Users/jayes/Desktop/MEIO/meio-optimizer/data/raw/inventory_snapshots.csv'
+FROM 'data/raw/inventory_snapshots.csv'
 WITH (FORMAT CSV, HEADER TRUE, NULL '');
 
 

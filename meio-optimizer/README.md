@@ -20,7 +20,7 @@ streamlit run app.py --server.port 8504
 You can also run the root helper:
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO
+cd <repository-root>
 .\run_app.ps1
 ```
 
@@ -46,7 +46,7 @@ Shell `DATABASE_URL` has highest priority. A `.env` file will not override it.
 ## Database smoke test
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO\meio-optimizer
+cd meio-optimizer
 $env:DATABASE_URL="postgresql+psycopg2://postgres:ENCODED_POSTGRES_PASSWORD@127.0.0.1:5432/meio_optimizer_db"
 .\.venv\Scripts\python.exe test_db_connection.py
 .\.venv\Scripts\python.exe -m streamlit run app.py --server.port 8504
@@ -80,13 +80,14 @@ schema.sql -> ingest.sql -> cleaning.sql -> marts.sql
 
 Important:
 
-- `ingest.sql` is configured for `C:/Users/jayes/Desktop/MEIO/data/raw`.
+- `run_pipeline.ps1` supplies portable absolute CSV paths from `data/raw` to
+  `ingest.sql`; use `-RawDataPath` to override the source.
 - This repo does not assume a running local PostgreSQL database unless you provide one.
 
 Root helper command:
 
 ```powershell
-cd C:\Users\jayes\Desktop\MEIO
+cd <repository-root>
 .\run_pipeline.ps1 -Database meio_optimizer_db -User postgres
 ```
 
